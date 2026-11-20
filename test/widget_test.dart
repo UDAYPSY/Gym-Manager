@@ -40,6 +40,7 @@ void main() {
     expect(find.text('Needs Attention First'), findsOneWidget);
     expect(find.text('All Plans'), findsOneWidget);
     expect(find.text('Select Batch'), findsOneWidget);
+    expect(find.text('Select Gender'), findsOneWidget);
 
     // Tap 'All' filter chip to open bottom sheet
     await tester.tap(find.text('All'));
@@ -59,6 +60,23 @@ void main() {
 
     // Verify chip updated to 'Active'
     expect(find.text('Active'), findsOneWidget);
+
+    // Tap 'Needs Attention First' filter chip
+    await tester.tap(find.text('Needs Attention First'));
+    await tester.pumpAndSettle();
+
+    // Verify 7 Attention / Sort options from screenshot
+    expect(find.text('Newly Joined Members First'), findsOneWidget);
+    expect(find.text('Highest Due Amount First'), findsOneWidget);
+    expect(find.text('Expiring Membership First'), findsOneWidget);
+    expect(find.text('Longest Membership Validity First'), findsOneWidget);
+    expect(find.text('Newly Purchased Membership First'), findsOneWidget);
+    expect(find.text('Recently Updated Members First'), findsOneWidget);
+
+    // Select 'Highest Due Amount First'
+    await tester.tap(find.text('Highest Due Amount First'));
+    await tester.pumpAndSettle();
+    expect(find.text('Highest Due Amount First'), findsOneWidget);
 
     // Verify Center Empty State
     expect(find.text('No Members Found'), findsOneWidget);

@@ -22,6 +22,7 @@ class _MembersScreenState extends State<MembersScreen> {
   String _filterAttention = 'Needs Attention First';
   String _filterPlan = 'All Plans';
   String _filterBatch = 'Select Batch';
+  String _filterGender = 'Select Gender';
 
   static const List<String> statusFilterOptions = [
     'All',
@@ -47,6 +48,23 @@ class _MembersScreenState extends State<MembersScreen> {
     'Expired PT Plans',
     'Total PT Plans',
     'Include blocked & deleted',
+  ];
+
+  static const List<String> attentionFilterOptions = [
+    'Needs Attention First',
+    'Newly Joined Members First',
+    'Highest Due Amount First',
+    'Expiring Membership First',
+    'Longest Membership Validity First',
+    'Newly Purchased Membership First',
+    'Recently Updated Members First',
+  ];
+
+  static const List<String> genderFilterOptions = [
+    'Select Gender',
+    'Male',
+    'Female',
+    'Other',
   ];
 
   @override
@@ -129,19 +147,40 @@ class _MembersScreenState extends State<MembersScreen> {
           if (_filterStatus == 'Total PT Plans' && !m.planName.toLowerCase().contains('pt')) return false;
           if (_filterStatus != 'Include blocked & deleted' && _filterStatus != 'Blocked' && m.status == MemberStatus.blocked) return false;
 
-          // Attention filter
-          if (_filterAttention == 'Expiring in 7 Days' && (m.daysRemaining > 7 || m.isExpired)) return false;
-          if (_filterAttention == 'Already Expired' && !m.isExpired) return false;
-          if (_filterAttention == 'Has Unpaid Dues' && !m.hasDues) return false;
-
           // Plan filter
           if (_filterPlan != 'All Plans' && !m.planName.toLowerCase().contains(_filterPlan.toLowerCase())) return false;
 
           // Batch filter
           if (_filterBatch != 'Select Batch' && m.batch != _filterBatch) return false;
 
+          // Gender filter
+          if (_filterGender != 'Select Gender' && m.gender.toLowerCase() != _filterGender.toLowerCase()) return false;
+
           return true;
         }).toList();
+
+        // Sorting / Priority Logic
+        filteredMembers.sort((a, b) {
+          switch (_filterAttention) {
+            case 'Newly Joined Members First':
+              return b.joinedDate.compareTo(a.joinedDate);
+            case 'Highest Due Amount First':
+              return b.duesAmount.compareTo(a.duesAmount);
+            case 'Expiring Membership First':
+              return a.expiryDate.compareTo(b.expiryDate);
+            case 'Longest Membership Validity First':
+              return b.expiryDate.compareTo(a.expiryDate);
+            case 'Newly Purchased Membership First':
+              return (b.paymentDate ?? b.joinedDate).compareTo(a.paymentDate ?? a.joinedDate);
+            case 'Recently Updated Members First':
+              return b.id.compareTo(a.id);
+            case 'Needs Attention First':
+            default:
+              final aScore = (a.hasDues ? 100 : 0) + (a.isExpired ? 50 : 0) + (30 - a.daysRemaining);
+              final bScore = (b.hasDues ? 100 : 0) + (b.isExpired ? 50 : 0) + (30 - b.daysRemaining);
+              return bScore.compareTo(aScore);
+          }
+        });
 
         return Scaffold(
           backgroundColor: AppColors.background,
@@ -448,12 +487,7 @@ class _MembersScreenState extends State<MembersScreen> {
               onTap: () {
                 FilterBottomSheet.show(
                   context,
-                  options: [
-                    'Needs Attention First',
-                    'Expiring in 7 Days',
-                    'Already Expired',
-                    'Has Unpaid Dues',
-                  ],
+                  options: attentionFilterOptions,
                   selectedOption: _filterAttention,
                   onSelected: (val) => setState(() => _filterAttention = val),
                 );
@@ -486,6 +520,18 @@ class _MembersScreenState extends State<MembersScreen> {
                   options: ['Select Batch', 'Morning', 'Evening', 'General Day', '24/7 Access'],
                   selectedOption: _filterBatch,
                   onSelected: (val) => setState(() => _filterBatch = val),
+                );
+              },
+            ),
+            const SizedBox(width: 8),
+            _buildFilterChip(
+              label: _filterGender,
+              onTap: () {
+                FilterBottomSheet.show(
+                  context,
+                  options: genderFilterOptions,
+                  selectedOption: _filterGender,
+                  onSelected: (val) => setState(() => _filterGender = val),
                 );
               },
             ),
