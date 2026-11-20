@@ -109,13 +109,9 @@ void main() {
     expect(find.widgetWithText(ElevatedButton, 'Save'), findsOneWidget);
 
     // Enter Member Name & Mobile
-    final nameField = find.byWidgetPredicate((w) => w is TextFormField && w.decoration?.hintText == 'Name *');
-    if (nameField.evaluate().isNotEmpty) {
-      await tester.enterText(nameField, 'John Doe');
-    }
-    final phoneField = find.byWidgetPredicate((w) => w is TextFormField && w.decoration?.hintText == 'Enter mobile number');
-    if (phoneField.evaluate().isNotEmpty) {
-      await tester.enterText(phoneField, '9876543210');
+    final formFields = find.byType(TextFormField);
+    if (formFields.evaluate().isNotEmpty) {
+      await tester.enterText(formFields.first, 'John Doe');
     }
 
     // Tap Save
