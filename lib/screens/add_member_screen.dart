@@ -541,26 +541,28 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: const [
-                                    Text(
-                                      'Payment reminder',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.textBlack,
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: const [
+                                      Text(
+                                        'Payment reminder',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.textBlack,
+                                        ),
                                       ),
-                                    ),
-                                    SizedBox(height: 2),
-                                    Text(
-                                      'Choose a date and time.',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey,
+                                      SizedBox(height: 2),
+                                      Text(
+                                        'Choose a date and time.',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                                 Switch(
                                   value: _paymentReminder,
@@ -589,51 +591,54 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                           const SizedBox(height: 14),
 
                           // Discount in Plan Section
-                          Row(
-                            children: [
-                              const Icon(Icons.tune, color: AppColors.primaryTeal, size: 20),
-                              const SizedBox(width: 8),
-                              const Text(
-                                'Discount in Plan:',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textBlack,
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
+                                const Icon(Icons.tune, color: AppColors.primaryTeal, size: 20),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Discount in Plan:',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textBlack,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 10),
-                              GestureDetector(
-                                onTap: () => setState(() => _discountType = 'Percent'),
-                                child: Row(
-                                  children: [
-                                    Radio<String>(
-                                      value: 'Percent',
-                                      groupValue: _discountType,
-                                      activeColor: AppColors.primaryTeal,
-                                      visualDensity: VisualDensity.compact,
-                                      onChanged: (val) => setState(() => _discountType = val!),
-                                    ),
-                                    const Text('Percent', style: TextStyle(fontSize: 13)),
-                                  ],
+                                const SizedBox(width: 10),
+                                GestureDetector(
+                                  onTap: () => setState(() => _discountType = 'Percent'),
+                                  child: Row(
+                                    children: [
+                                      Radio<String>(
+                                        value: 'Percent',
+                                        groupValue: _discountType,
+                                        activeColor: AppColors.primaryTeal,
+                                        visualDensity: VisualDensity.compact,
+                                        onChanged: (val) => setState(() => _discountType = val!),
+                                      ),
+                                      const Text('Percent', style: TextStyle(fontSize: 13)),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              GestureDetector(
-                                onTap: () => setState(() => _discountType = 'Amount'),
-                                child: Row(
-                                  children: [
-                                    Radio<String>(
-                                      value: 'Amount',
-                                      groupValue: _discountType,
-                                      activeColor: AppColors.primaryTeal,
-                                      visualDensity: VisualDensity.compact,
-                                      onChanged: (val) => setState(() => _discountType = val!),
-                                    ),
-                                    const Text('Amount', style: TextStyle(fontSize: 13)),
-                                  ],
+                                const SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: () => setState(() => _discountType = 'Amount'),
+                                  child: Row(
+                                    children: [
+                                      Radio<String>(
+                                        value: 'Amount',
+                                        groupValue: _discountType,
+                                        activeColor: AppColors.primaryTeal,
+                                        visualDensity: VisualDensity.compact,
+                                        onChanged: (val) => setState(() => _discountType = val!),
+                                      ),
+                                      const Text('Amount', style: TextStyle(fontSize: 13)),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                           const SizedBox(height: 10),
 
