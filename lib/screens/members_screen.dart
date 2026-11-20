@@ -23,6 +23,32 @@ class _MembersScreenState extends State<MembersScreen> {
   String _filterPlan = 'All Plans';
   String _filterBatch = 'Select Batch';
 
+  static const List<String> statusFilterOptions = [
+    'All',
+    'Active',
+    'Inactive',
+    'Frozen Membership',
+    'Unpaid',
+    'Paid',
+    'Expiring in 1-3 Days',
+    'Expiring in 4-7 Days',
+    'Expiring in 8-15 Days',
+    'Expired 1-3 Days Ago',
+    'Expired 4-7 Days Ago',
+    'Birthday Today',
+    'Blocked',
+    'Expiring Today',
+    'Biometric Registered',
+    'PT Plan Expiring Today',
+    'PT Plan Expiring (1–3d)',
+    'PT Plan Expiring (4–7d)',
+    'PT Plan Expiring (8–15d)',
+    'Active PT Plans',
+    'Expired PT Plans',
+    'Total PT Plans',
+    'Include blocked & deleted',
+  ];
+
   @override
   void dispose() {
     _searchCtrl.dispose();
@@ -67,10 +93,41 @@ class _MembersScreenState extends State<MembersScreen> {
             }
           }
 
-          // Status filter
-          if (_filterStatus == 'Active' && m.status != MemberStatus.active) return false;
-          if (_filterStatus == 'Expired' && !m.isExpired) return false;
-          if (_filterStatus == 'Pending Dues' && !m.hasDues) return false;
+          // Status filter matching the 23 options
+          if (_filterStatus == 'Active' && (m.status != MemberStatus.active || m.isExpired)) return false;
+          if (_filterStatus == 'Inactive' && m.status == MemberStatus.active && !m.isExpired) return false;
+          if (_filterStatus == 'Frozen Membership' && !(m.notes?.toLowerCase().contains('frozen') ?? false)) return false;
+          if (_filterStatus == 'Unpaid' && !m.hasDues) return false;
+          if (_filterStatus == 'Paid' && (m.hasDues || m.amountPaid <= 0)) return false;
+          if (_filterStatus == 'Expiring in 1-3 Days' && (m.daysRemaining < 1 || m.daysRemaining > 3 || m.isExpired)) return false;
+          if (_filterStatus == 'Expiring in 4-7 Days' && (m.daysRemaining < 4 || m.daysRemaining > 7 || m.isExpired)) return false;
+          if (_filterStatus == 'Expiring in 8-15 Days' && (m.daysRemaining < 8 || m.daysRemaining > 15 || m.isExpired)) return false;
+          if (_filterStatus == 'Expired 1-3 Days Ago') {
+            if (!m.isExpired) return false;
+            final daysAgo = DateTime.now().difference(m.expiryDate).inDays;
+            if (daysAgo < 1 || daysAgo > 3) return false;
+          }
+          if (_filterStatus == 'Expired 4-7 Days Ago') {
+            if (!m.isExpired) return false;
+            final daysAgo = DateTime.now().difference(m.expiryDate).inDays;
+            if (daysAgo < 4 || daysAgo > 7) return false;
+          }
+          if (_filterStatus == 'Birthday Today') {
+            if (m.dob == null || m.dob!.isEmpty) return false;
+            final now = DateTime.now();
+            final todayStr = '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}';
+            if (!m.dob!.startsWith(todayStr)) return false;
+          }
+          if (_filterStatus == 'Blocked' && m.status != MemberStatus.blocked) return false;
+          if (_filterStatus == 'Expiring Today' && (m.daysRemaining != 0 || m.isExpired)) return false;
+          if (_filterStatus == 'PT Plan Expiring Today' && (!m.planName.toLowerCase().contains('pt') || m.daysRemaining != 0 || m.isExpired)) return false;
+          if (_filterStatus == 'PT Plan Expiring (1–3d)' && (!m.planName.toLowerCase().contains('pt') || m.daysRemaining < 1 || m.daysRemaining > 3 || m.isExpired)) return false;
+          if (_filterStatus == 'PT Plan Expiring (4–7d)' && (!m.planName.toLowerCase().contains('pt') || m.daysRemaining < 4 || m.daysRemaining > 7 || m.isExpired)) return false;
+          if (_filterStatus == 'PT Plan Expiring (8–15d)' && (!m.planName.toLowerCase().contains('pt') || m.daysRemaining < 8 || m.daysRemaining > 15 || m.isExpired)) return false;
+          if (_filterStatus == 'Active PT Plans' && (!m.planName.toLowerCase().contains('pt') || m.isExpired)) return false;
+          if (_filterStatus == 'Expired PT Plans' && (!m.planName.toLowerCase().contains('pt') || !m.isExpired)) return false;
+          if (_filterStatus == 'Total PT Plans' && !m.planName.toLowerCase().contains('pt')) return false;
+          if (_filterStatus != 'Include blocked & deleted' && _filterStatus != 'Blocked' && m.status == MemberStatus.blocked) return false;
 
           // Attention filter
           if (_filterAttention == 'Expiring in 7 Days' && (m.daysRemaining > 7 || m.isExpired)) return false;
@@ -187,7 +244,7 @@ class _MembersScreenState extends State<MembersScreen> {
                                 style: const TextStyle(fontSize: 14, color: AppColors.textBlack),
                                 decoration: InputDecoration(
                                   hintText: _isMemberIdMode
-                                      ? 'Search for "Member ID"'
+                                      ? 'Search for "MembershipId"'
                                       : 'Search for "Mobile"',
                                   hintStyle: TextStyle(
                                     color: Colors.grey.shade500,
@@ -379,8 +436,7 @@ class _MembersScreenState extends State<MembersScreen> {
               onTap: () {
                 FilterBottomSheet.show(
                   context,
-                  title: 'Filter by Status',
-                  options: ['All', 'Active', 'Expired', 'Pending Dues'],
+                  options: statusFilterOptions,
                   selectedOption: _filterStatus,
                   onSelected: (val) => setState(() => _filterStatus = val),
                 );
@@ -392,7 +448,6 @@ class _MembersScreenState extends State<MembersScreen> {
               onTap: () {
                 FilterBottomSheet.show(
                   context,
-                  title: 'Attention Priority',
                   options: [
                     'Needs Attention First',
                     'Expiring in 7 Days',
@@ -410,7 +465,6 @@ class _MembersScreenState extends State<MembersScreen> {
               onTap: () {
                 FilterBottomSheet.show(
                   context,
-                  title: 'Filter by Plan',
                   options: [
                     'All Plans',
                     '1 Month Fitness',
@@ -429,7 +483,6 @@ class _MembersScreenState extends State<MembersScreen> {
               onTap: () {
                 FilterBottomSheet.show(
                   context,
-                  title: 'Filter by Batch',
                   options: ['Select Batch', 'Morning', 'Evening', 'General Day', '24/7 Access'],
                   selectedOption: _filterBatch,
                   onSelected: (val) => setState(() => _filterBatch = val),

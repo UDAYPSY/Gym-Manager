@@ -30,11 +30,35 @@ void main() {
     expect(find.text('Search for "Mobile"'), findsOneWidget);
     expect(find.text('M ID'), findsOneWidget);
 
+    // Toggle M ID and verify hint updates to 'Search for "MembershipId"'
+    await tester.tap(find.text('M ID'));
+    await tester.pumpAndSettle();
+    expect(find.text('Search for "MembershipId"'), findsOneWidget);
+
     // Verify Filter Chips
     expect(find.text('All'), findsOneWidget);
     expect(find.text('Needs Attention First'), findsOneWidget);
     expect(find.text('All Plans'), findsOneWidget);
     expect(find.text('Select Batch'), findsOneWidget);
+
+    // Tap 'All' filter chip to open bottom sheet
+    await tester.tap(find.text('All'));
+    await tester.pumpAndSettle();
+
+    // Verify bottom sheet circular close button and options
+    expect(find.byIcon(Icons.close), findsOneWidget);
+    expect(find.text('Active'), findsOneWidget);
+    expect(find.text('Inactive'), findsOneWidget);
+    expect(find.text('Frozen Membership'), findsOneWidget);
+    expect(find.text('Unpaid'), findsOneWidget);
+    expect(find.text('Paid'), findsOneWidget);
+
+    // Select 'Active'
+    await tester.tap(find.text('Active'));
+    await tester.pumpAndSettle();
+
+    // Verify chip updated to 'Active'
+    expect(find.text('Active'), findsOneWidget);
 
     // Verify Center Empty State
     expect(find.text('No Members Found'), findsOneWidget);
