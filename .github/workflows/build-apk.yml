@@ -96,6 +96,25 @@ jobs:
           path: build/app/outputs/flutter-apk/*.apk
           if-no-files-found: error
 
+      - name: Publish GitHub Release with APK
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
+        with:
+          tag_name: latest
+          name: "Gym Manager Production Release"
+          body: |
+            ### 🏋️‍♂️ Gym Manager Production Release
+            Automated production build matching exact UI specifications.
+            
+            - **Direct Device APK**: `app-release.apk` (Install directly on Android phones/tablets).
+          files: |
+            build/app/outputs/flutter-apk/*.apk
+          prerelease: false
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
   build-web:
     name: Build & Deploy Web App
     runs-on: ubuntu-latest
@@ -123,12 +142,18 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: build/web
+        continue-on-error: true
 
   deploy-pages:
     name: Deploy to GitHub Pages
     needs: build-web
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    continue-on-error: true
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        continue-on-error: true

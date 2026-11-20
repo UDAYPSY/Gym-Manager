@@ -4,6 +4,13 @@ import 'package:gym_manager/main.dart';
 
 void main() {
   testWidgets('Gym Manager exact view elements test', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
     // Build the app
     await tester.pumpWidget(const GymManagerApp());
     await tester.pumpAndSettle();

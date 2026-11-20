@@ -43,8 +43,7 @@ class _MainHubScreenState extends State<MainHubScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                height: 64,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
@@ -75,7 +74,7 @@ class _MainHubScreenState extends State<MainHubScreen> {
               Container(
                 width: 72,
                 height: 4,
-                margin: const EdgeInsets.only(bottom: 6),
+                margin: const EdgeInsets.only(top: 2, bottom: 4),
                 decoration: BoxDecoration(
                   color: Colors.black.withOpacity(0.6),
                   borderRadius: BorderRadius.circular(2),
@@ -95,38 +94,43 @@ class _MainHubScreenState extends State<MainHubScreen> {
   }) {
     final isSelected = _currentIndex == index;
 
-    return InkWell(
-      onTap: () => setState(() => _currentIndex = index),
-      splashColor: Colors.transparent,
-      highlightColor: Colors.transparent,
-      child: SizedBox(
-        width: 80,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Active pill indicator
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.navIndicator : Colors.transparent,
-                borderRadius: BorderRadius.circular(16),
+    return Expanded(
+      child: InkWell(
+        onTap: () => setState(() => _currentIndex = index),
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Active pill indicator
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
+                decoration: BoxDecoration(
+                  color: isSelected ? AppColors.navIndicator : Colors.transparent,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  icon,
+                  size: 22,
+                  color: isSelected ? AppColors.navSelected : AppColors.navUnselected,
+                ),
               ),
-              child: Icon(
-                icon,
-                size: 24,
-                color: isSelected ? AppColors.navSelected : AppColors.navUnselected,
+              const SizedBox(height: 2),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                  color: isSelected ? AppColors.navSelected : AppColors.navUnselected,
+                ),
               ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected ? AppColors.navSelected : AppColors.navUnselected,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
