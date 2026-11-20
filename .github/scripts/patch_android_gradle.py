@@ -77,5 +77,36 @@ def patch_gradle_files():
             f.write(content)
         print(f"Patched: {file_path}")
 
+def patch_manifest():
+    manifest_paths = ['android/app/src/main/AndroidManifest.xml']
+    for path in manifest_paths:
+        if os.path.exists(path):
+            with open(path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            content = re.sub(r'package\s*=\s*["\'][^"\']+["\']', 'package="com.gymmanager.app"', content)
+            if 'android:name="com.gymmanager.app.MainActivity"' not in content and 'android:name=".MainActivity"' not in content:
+                content = content.replace('android:name="', 'android:name="com.gymmanager.app.MainActivity" <!-- ')
+            if 'android.permission.INTERNET' not in content:
+                content = content.replace('<application', '<uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>\n\n    <application')
+            with open(path, 'w', encoding='utf-8') as f:
+                f.write(content)
+            print(f"Patched AndroidManifest at {path}")
+
+def patch_main_activity():
+    activity_files = glob.glob('android/app/src/main/**/MainActivity.*', recursive=True)
+    full_activity_code = '''package com.gymmanager.app
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity: FlutterActivity() {
+}
+'''
+    for file_path in activity_files:
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(full_activity_code)
+        print(f"Enforced correct MainActivity at {file_path}")
+
 if __name__ == '__main__':
     patch_gradle_files()
+    patch_manifest()
+    patch_main_activity()

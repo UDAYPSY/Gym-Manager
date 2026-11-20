@@ -33,7 +33,7 @@ jobs:
       - name: Scaffolding and Dependencies
         run: |
           cp pubspec.yaml pubspec.yaml.bak
-          flutter create --org com.gymmanager --project-name gym_manager --platforms android,web .
+          flutter create --org com.gymmanager --project-name app --platforms android,web .
           cp pubspec.yaml.bak pubspec.yaml
           python3 .github/scripts/patch_android_gradle.py
           flutter pub get
