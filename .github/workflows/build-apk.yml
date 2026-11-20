@@ -1,0 +1,134 @@
+name: Build Android APK and Web App
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build-apk:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.x'
+          channel: 'stable'
+
+      - name: Scaffolding and Dependencies
+        run: |
+          cp pubspec.yaml pubspec.yaml.bak
+          flutter create --org com.gymmanager --project-name gym_manager --platforms android,web .
+          cp pubspec.yaml.bak pubspec.yaml
+          python3 .github/scripts/patch_android_gradle.py
+          flutter pub get
+
+      - name: Run Automated Test Suite
+        run: |
+          set -e -o pipefail
+          flutter test 2>&1 | tee test_run.log || {
+            echo "==================== TEST FAILURE LOG ===================="
+            tail -n 150 test_run.log
+            exit 1
+          }
+
+      - name: Setup Permanent Release Keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          mkdir -p android/app
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "Decoding release keystore from secrets..."
+            echo "$KEYSTORE_BASE64" | base64 --decode > android/app/release.jks
+          elif [ -f android/app/release.jks ]; then
+            echo "Using existing repository release keystore."
+          else
+            echo "Generating permanent release keystore..."
+            keytool -genkeypair -v -keystore android/app/release.jks \
+              -alias gymmanager -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass gymmanager2026 -keypass gymmanager2026 \
+              -dname "CN=GymManager, OU=App, O=LTS, L=Patna, ST=Bihar, C=IN"
+            
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add -f android/app/release.jks
+            git commit -m "ci: persist permanent release signing keystore [skip ci]" || true
+            git push origin main || true
+          fi
+          python3 .github/scripts/patch_android_gradle.py
+
+      - name: Compile Release APK
+        run: |
+          set -e -o pipefail
+          flutter build apk --release --no-tree-shake-icons -v 2>&1 | tee apk_build.log
+          echo "=== Built Artifacts ==="
+          ls -la build/app/outputs/flutter-apk/ || true
+
+      - name: Upload Build Log Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-build-log
+          path: |
+            test_run.log
+            apk_build.log
+          if-no-files-found: ignore
+
+      - name: Upload Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: gym-manager-apk
+          path: build/app/outputs/flutter-apk/*.apk
+          if-no-files-found: error
+
+  build-web:
+    name: Build & Deploy Web App
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.x'
+          channel: 'stable'
+
+      - name: Scaffolding and Dependencies
+        run: |
+          cp pubspec.yaml pubspec.yaml.bak
+          flutter create --org com.gymmanager --project-name gym_manager --platforms web .
+          cp pubspec.yaml.bak pubspec.yaml
+          flutter pub get
+
+      - name: Compile Web App
+        run: flutter build web --release --base-href "/Gym-Manager/"
+
+      - name: Upload Web Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy-pages:
+    name: Deploy to GitHub Pages
+    needs: build-web
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
