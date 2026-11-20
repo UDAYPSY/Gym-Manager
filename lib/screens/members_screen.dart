@@ -5,6 +5,7 @@ import '../constants/app_colors.dart';
 import '../widgets/add_member_dialog.dart';
 import '../widgets/filter_bottom_sheet.dart';
 import '../widgets/currency_picker_dialog.dart';
+import 'add_member_screen.dart';
 
 class MembersScreen extends StatefulWidget {
   const MembersScreen({Key? key}) : super(key: key);
@@ -29,9 +30,9 @@ class _MembersScreenState extends State<MembersScreen> {
   }
 
   void _showAddMemberModal(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => const AddMemberDialog(),
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (ctx) => const AddMemberScreen()),
     );
   }
 
