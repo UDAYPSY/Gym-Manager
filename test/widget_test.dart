@@ -319,8 +319,9 @@ void main() {
 
     // 4. Test Attendance -> Marks attendance
     await tester.tap(find.text('Attendance'));
-    await tester.pumpAndSettle();
+    await tester.pump();
     expect(find.byType(SnackBar), findsOneWidget);
+    await tester.pumpAndSettle();
 
     // 5. Test Renew Plan -> Opens Renew Plan screen
     await tester.tap(find.text('Renew Plan'));

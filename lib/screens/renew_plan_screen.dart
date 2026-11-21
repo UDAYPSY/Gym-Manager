@@ -343,35 +343,38 @@ class _RenewPlanScreenState extends State<RenewPlanScreen> {
                       const SizedBox(height: 14),
 
                       // Discount in Plan:
-                      Row(
-                        children: [
-                          const Icon(Icons.tune, color: AppColors.primaryTeal, size: 20),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'Discount in Plan:',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF374151),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            const Icon(Icons.tune, color: AppColors.primaryTeal, size: 20),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'Discount in Plan:',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF374151),
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Radio<String>(
-                            value: 'Percent',
-                            groupValue: _discountType,
-                            activeColor: AppColors.primaryTeal,
-                            onChanged: (val) => setState(() => _discountType = val!),
-                          ),
-                          const Text('Percent', style: TextStyle(fontSize: 13)),
-                          const SizedBox(width: 12),
-                          Radio<String>(
-                            value: 'Amount',
-                            groupValue: _discountType,
-                            activeColor: AppColors.primaryTeal,
-                            onChanged: (val) => setState(() => _discountType = val!),
-                          ),
-                          const Text('Amount', style: TextStyle(fontSize: 13)),
-                        ],
+                            const SizedBox(width: 12),
+                            Radio<String>(
+                              value: 'Percent',
+                              groupValue: _discountType,
+                              activeColor: AppColors.primaryTeal,
+                              onChanged: (val) => setState(() => _discountType = val!),
+                            ),
+                            const Text('Percent', style: TextStyle(fontSize: 13)),
+                            const SizedBox(width: 12),
+                            Radio<String>(
+                              value: 'Amount',
+                              groupValue: _discountType,
+                              activeColor: AppColors.primaryTeal,
+                              onChanged: (val) => setState(() => _discountType = val!),
+                            ),
+                            const Text('Amount', style: TextStyle(fontSize: 13)),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 10),
 
@@ -431,6 +434,42 @@ class _RenewPlanScreenState extends State<RenewPlanScreen> {
     );
   }
 
+  Widget _buildOutlineLabeledInput({
+    required String label,
+    required IconData icon,
+    required Widget child,
+    Color? iconColor,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFD1D5DB)),
+      ),
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              color: Color(0xFF6B7280),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Row(
+            children: [
+              Icon(icon, color: iconColor ?? AppColors.primaryTeal, size: 20),
+              const SizedBox(width: 10),
+              Expanded(child: child),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDateField({
     required String label,
     required DateTime? date,
@@ -438,26 +477,16 @@ class _RenewPlanScreenState extends State<RenewPlanScreen> {
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        height: 48,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFFD1D5DB)),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.calendar_today_outlined, color: AppColors.primaryTeal, size: 20),
-            const SizedBox(width: 10),
-            Text(
-              date != null ? _formatDate(date) : label,
-              style: TextStyle(
-                fontSize: 14,
-                color: date != null ? const Color(0xFF111827) : const Color(0xFF9CA3AF),
-                fontWeight: date != null ? FontWeight.w500 : FontWeight.normal,
-              ),
-            ),
-          ],
+      child: _buildOutlineLabeledInput(
+        label: label,
+        icon: Icons.calendar_today_outlined,
+        child: Text(
+          date != null ? _formatDate(date) : label,
+          style: TextStyle(
+            fontSize: 14,
+            color: date != null ? const Color(0xFF111827) : const Color(0xFF9CA3AF),
+            fontWeight: date != null ? FontWeight.w500 : FontWeight.normal,
+          ),
         ),
       ),
     );
@@ -507,33 +536,22 @@ class _RenewPlanScreenState extends State<RenewPlanScreen> {
     required List<String> items,
     required ValueChanged<String?> onChanged,
   }) {
-    return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFD1D5DB)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: AppColors.primaryTeal, size: 20),
-          const SizedBox(width: 10),
-          Expanded(
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: items.contains(value) ? value : items.first,
-                isExpanded: true,
-                items: items
-                    .map((item) => DropdownMenuItem(
-                          value: item,
-                          child: Text(item, style: const TextStyle(fontSize: 14, color: Color(0xFF111827))),
-                        ))
-                    .toList(),
-                onChanged: onChanged,
-              ),
-            ),
-          ),
-        ],
+    return _buildOutlineLabeledInput(
+      label: label,
+      icon: icon,
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: items.contains(value) ? value : items.first,
+          isExpanded: true,
+          isDense: true,
+          items: items
+              .map((item) => DropdownMenuItem(
+                    value: item,
+                    child: Text(item, style: const TextStyle(fontSize: 14, color: Color(0xFF111827))),
+                  ))
+              .toList(),
+          onChanged: onChanged,
+        ),
       ),
     );
   }
