@@ -106,7 +106,31 @@ class MainActivity: FlutterActivity() {
             f.write(full_activity_code)
         print(f"Enforced correct MainActivity at {file_path}")
 
+def patch_repositories():
+    targets = glob.glob('android/**/*.gradle*', recursive=True)
+    for path in targets:
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            if 'mavenCentral()' in content and 'https://repo1.maven.org/maven2/' not in content:
+                if path.endswith('.kts'):
+                    content = content.replace(
+                        'mavenCentral()',
+                        'mavenCentral()\n        maven("https://repo1.maven.org/maven2/")'
+                    )
+                else:
+                    content = content.replace(
+                        'mavenCentral()',
+                        "mavenCentral()\n        maven { url 'https://repo1.maven.org/maven2/' }"
+                    )
+                with open(path, 'w', encoding='utf-8') as f:
+                    f.write(content)
+                print(f"Added repo1.maven.org fallback to {path}")
+        except Exception as e:
+            print(f"Notice: could not patch repos in {path}: {e}")
+
 if __name__ == '__main__':
     patch_gradle_files()
+    patch_repositories()
     patch_manifest()
     patch_main_activity()

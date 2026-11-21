@@ -75,7 +75,10 @@ jobs:
       - name: Compile Release APK
         run: |
           set -e -o pipefail
-          flutter build apk --release --no-tree-shake-icons -v 2>&1 | tee apk_build.log
+          flutter build apk --release --no-tree-shake-icons -v 2>&1 | tee apk_build.log || {
+            echo "First attempt failed, retrying once in case of transient repository network glitch..."
+            flutter build apk --release --no-tree-shake-icons -v 2>&1 | tee -a apk_build.log
+          }
           echo "=== Built Artifacts ==="
           ls -la build/app/outputs/flutter-apk/ || true
 
