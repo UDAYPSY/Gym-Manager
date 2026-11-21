@@ -2,6 +2,66 @@ import 'dart:convert';
 
 enum MemberStatus { active, expired, pending, blocked }
 
+class PaymentRecord {
+  final String id;
+  final DateTime date;
+  final double amount;
+  final String paymentMethod;
+  final String? notes;
+
+  PaymentRecord({
+    required this.id,
+    required this.date,
+    required this.amount,
+    this.paymentMethod = 'Cash',
+    this.notes,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'date': date.toIso8601String(),
+    'amount': amount,
+    'paymentMethod': paymentMethod,
+    'notes': notes,
+  };
+
+  factory PaymentRecord.fromJson(Map<String, dynamic> json) => PaymentRecord(
+    id: json['id'] as String? ?? '',
+    date: json['date'] != null ? DateTime.parse(json['date'] as String) : DateTime.now(),
+    amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
+    paymentMethod: json['paymentMethod'] as String? ?? 'Cash',
+    notes: json['notes'] as String?,
+  );
+}
+
+class AttendanceRecord {
+  final String id;
+  final DateTime date;
+  final String checkInTime; // e.g. "01:33 PM"
+  final String? checkOutTime; // e.g. "01:34 PM"
+
+  AttendanceRecord({
+    required this.id,
+    required this.date,
+    required this.checkInTime,
+    this.checkOutTime,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'date': date.toIso8601String(),
+    'checkInTime': checkInTime,
+    'checkOutTime': checkOutTime,
+  };
+
+  factory AttendanceRecord.fromJson(Map<String, dynamic> json) => AttendanceRecord(
+    id: json['id'] as String? ?? '',
+    date: json['date'] != null ? DateTime.parse(json['date'] as String) : DateTime.now(),
+    checkInTime: json['checkInTime'] as String? ?? '',
+    checkOutTime: json['checkOutTime'] as String?,
+  );
+}
+
 class GymMember {
   final String id;
   final String memberId; // e.g. "3"
@@ -30,6 +90,12 @@ class GymMember {
   final String? notes;
   final String? photoBase64;
 
+  final List<PaymentRecord> paymentHistory;
+  final List<AttendanceRecord> attendanceHistory;
+  final String biometricStatus; // "Not Registered", "Registered"
+  final String biometricId; // "18850-6"
+  final bool isFrozen;
+
   GymMember({
     required this.id,
     required this.memberId,
@@ -57,7 +123,32 @@ class GymMember {
     this.address,
     this.notes,
     this.photoBase64,
-  });
+    List<PaymentRecord>? paymentHistory,
+    List<AttendanceRecord>? attendanceHistory,
+    this.biometricStatus = 'Not Registered',
+    String? biometricId,
+    this.isFrozen = false,
+  })  : paymentHistory = paymentHistory ??
+            (amountPaid > 0
+                ? [
+                    PaymentRecord(
+                      id: 'pay_init',
+                      date: paymentDate ?? joinedDate,
+                      amount: amountPaid,
+                      paymentMethod: paymentMethod ?? 'Cash',
+                    )
+                  ]
+                : []),
+        attendanceHistory = attendanceHistory ??
+            [
+              AttendanceRecord(
+                id: 'att_sample',
+                date: joinedDate,
+                checkInTime: '01:33 PM',
+                checkOutTime: '01:34 PM',
+              )
+            ],
+        biometricId = biometricId ?? '18850-$memberId';
 
   bool get isExpired => expiryDate.isBefore(DateTime.now());
   bool get hasDues => duesAmount > 0;
@@ -93,6 +184,11 @@ class GymMember {
     String? address,
     String? notes,
     String? photoBase64,
+    List<PaymentRecord>? paymentHistory,
+    List<AttendanceRecord>? attendanceHistory,
+    String? biometricStatus,
+    String? biometricId,
+    bool? isFrozen,
   }) {
     return GymMember(
       id: id ?? this.id,
@@ -121,37 +217,47 @@ class GymMember {
       address: address ?? this.address,
       notes: notes ?? this.notes,
       photoBase64: photoBase64 ?? this.photoBase64,
+      paymentHistory: paymentHistory ?? this.paymentHistory,
+      attendanceHistory: attendanceHistory ?? this.attendanceHistory,
+      biometricStatus: biometricStatus ?? this.biometricStatus,
+      biometricId: biometricId ?? this.biometricId,
+      isFrozen: isFrozen ?? this.isFrozen,
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'memberId': memberId,
-    'fullName': fullName,
-    'phone': phone,
-    'countryCode': countryCode,
-    'gender': gender,
-    'joinedDate': joinedDate.toIso8601String(),
-    'expiryDate': expiryDate.toIso8601String(),
-    'planName': planName,
-    'planAmount': planAmount,
-    'amountPaid': amountPaid,
-    'duesAmount': duesAmount,
-    'status': status.name,
-    'batch': batch,
-    'paymentMethod': paymentMethod,
-    'paymentDate': paymentDate?.toIso8601String(),
-    'paymentReminder': paymentReminder,
-    'comments': comments,
-    'discountType': discountType,
-    'discount': discount,
-    'admissionFees': admissionFees,
-    'email': email,
-    'dob': dob,
-    'address': address,
-    'notes': notes,
-    'photoBase64': photoBase64,
-  };
+        'id': id,
+        'memberId': memberId,
+        'fullName': fullName,
+        'phone': phone,
+        'countryCode': countryCode,
+        'gender': gender,
+        'joinedDate': joinedDate.toIso8601String(),
+        'expiryDate': expiryDate.toIso8601String(),
+        'planName': planName,
+        'planAmount': planAmount,
+        'amountPaid': amountPaid,
+        'duesAmount': duesAmount,
+        'status': status.name,
+        'batch': batch,
+        'paymentMethod': paymentMethod,
+        'paymentDate': paymentDate?.toIso8601String(),
+        'paymentReminder': paymentReminder,
+        'comments': comments,
+        'discountType': discountType,
+        'discount': discount,
+        'admissionFees': admissionFees,
+        'email': email,
+        'dob': dob,
+        'address': address,
+        'notes': notes,
+        'photoBase64': photoBase64,
+        'paymentHistory': paymentHistory.map((p) => p.toJson()).toList(),
+        'attendanceHistory': attendanceHistory.map((a) => a.toJson()).toList(),
+        'biometricStatus': biometricStatus,
+        'biometricId': biometricId,
+        'isFrozen': isFrozen,
+      };
 
   factory GymMember.fromJson(Map<String, dynamic> json) {
     return GymMember(
@@ -161,8 +267,12 @@ class GymMember {
       phone: json['phone'] as String? ?? '',
       countryCode: json['countryCode'] as String? ?? '+91',
       gender: json['gender'] as String? ?? 'Male',
-      joinedDate: json['joinedDate'] != null ? DateTime.parse(json['joinedDate'] as String) : DateTime.now(),
-      expiryDate: json['expiryDate'] != null ? DateTime.parse(json['expiryDate'] as String) : DateTime.now().add(const Duration(days: 180)),
+      joinedDate: json['joinedDate'] != null
+          ? DateTime.parse(json['joinedDate'] as String)
+          : DateTime.now(),
+      expiryDate: json['expiryDate'] != null
+          ? DateTime.parse(json['expiryDate'] as String)
+          : DateTime.now().add(const Duration(days: 180)),
       planName: json['planName'] as String? ?? '6 month plan (20000)',
       planAmount: (json['planAmount'] as num?)?.toDouble() ?? 20000.0,
       amountPaid: (json['amountPaid'] as num?)?.toDouble() ?? 0.0,
@@ -173,7 +283,9 @@ class GymMember {
       ),
       batch: json['batch'] as String? ?? 'No Batch Found',
       paymentMethod: json['paymentMethod'] as String? ?? 'Cash',
-      paymentDate: json['paymentDate'] != null ? DateTime.parse(json['paymentDate'] as String) : null,
+      paymentDate: json['paymentDate'] != null
+          ? DateTime.parse(json['paymentDate'] as String)
+          : null,
       paymentReminder: json['paymentReminder'] as bool? ?? false,
       comments: json['comments'] as String?,
       discountType: json['discountType'] as String? ?? 'Percent',
@@ -184,6 +296,15 @@ class GymMember {
       address: json['address'] as String?,
       notes: json['notes'] as String?,
       photoBase64: json['photoBase64'] as String?,
+      paymentHistory: (json['paymentHistory'] as List?)
+          ?.map((p) => PaymentRecord.fromJson(p as Map<String, dynamic>))
+          .toList(),
+      attendanceHistory: (json['attendanceHistory'] as List?)
+          ?.map((a) => AttendanceRecord.fromJson(a as Map<String, dynamic>))
+          .toList(),
+      biometricStatus: json['biometricStatus'] as String? ?? 'Not Registered',
+      biometricId: json['biometricId'] as String?,
+      isFrozen: json['isFrozen'] as bool? ?? false,
     );
   }
 }
@@ -217,5 +338,6 @@ class BranchSettings {
     this.address = '',
   });
 
-  bool get hasSelectedCurrency => currencySymbol != null && currencySymbol!.isNotEmpty;
+  bool get hasSelectedCurrency =>
+      currencySymbol != null && currencySymbol!.isNotEmpty;
 }

@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../services/gym_service.dart';
 import '../models/gym_models.dart';
 import '../constants/app_colors.dart';
@@ -6,6 +8,7 @@ import '../widgets/add_member_dialog.dart';
 import '../widgets/filter_bottom_sheet.dart';
 import '../widgets/currency_picker_dialog.dart';
 import 'add_member_screen.dart';
+import 'member_detail_screen.dart';
 
 class MembersScreen extends StatefulWidget {
   const MembersScreen({Key? key}) : super(key: key);
@@ -284,7 +287,7 @@ class _MembersScreenState extends State<MembersScreen> {
                                 decoration: InputDecoration(
                                   hintText: _isMemberIdMode
                                       ? 'Search for "MembershipId"'
-                                      : 'Search for "Mobile"',
+                                      : 'Search for "Name"',
                                   hintStyle: TextStyle(
                                     color: Colors.grey.shade500,
                                     fontSize: 14,
@@ -641,88 +644,630 @@ class _MembersScreenState extends State<MembersScreen> {
 
   Widget _buildMemberList(BuildContext context, List<GymMember> members) {
     final currency = GymService().settings.currencySymbol ?? '₹';
+    final numFormatter = NumberFormat('#,##,###');
 
     return ListView.builder(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       itemCount: members.length,
       itemBuilder: (context, index) {
         final m = members[index];
-        final isExpired = m.isExpired;
-        return Card(
-          elevation: 1,
-          margin: const EdgeInsets.only(bottom: 10),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            leading: CircleAvatar(
-              backgroundColor: isExpired
-                  ? Colors.red.shade100
-                  : AppColors.primaryTeal.withOpacity(0.12),
-              child: Text(
-                m.fullName.isNotEmpty ? m.fullName[0].toUpperCase() : 'M',
-                style: TextStyle(
-                  color: isExpired ? Colors.red : AppColors.primaryTeal,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            title: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    m.fullName,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: isExpired ? Colors.red.shade50 : Colors.green.shade50,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: isExpired ? Colors.red : Colors.green),
-                  ),
-                  child: Text(
-                    isExpired ? 'Expired' : 'Active',
-                    style: TextStyle(
-                      color: isExpired ? Colors.red : Colors.green,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
+        final expiryStr = DateFormat('dd MMM yyyy').format(m.expiryDate);
+        final dueStr = '$currency${numFormatter.format(m.duesAmount.toInt())}';
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 14),
+          child: Stack(
+            children: [
+              // Top-Right Green Corner Accent (exact match to screenshot)
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF43A047),
+                    borderRadius: BorderRadius.only(
+                      topRight: Radius.circular(16),
+                      bottomLeft: Radius.circular(24),
                     ),
                   ),
                 ),
-              ],
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 4),
-                Text('ID: ${m.memberId} | 📱 ${m.phone}', style: const TextStyle(fontSize: 13)),
-                const SizedBox(height: 2),
-                Text('Plan: ${m.planName} (${m.batch})', style: const TextStyle(fontSize: 12, color: AppColors.textGray)),
-                if (m.hasDues)
-                  Text('Dues: $currency${m.duesAmount}', style: const TextStyle(fontSize: 12, color: Colors.red, fontWeight: FontWeight.bold)),
-              ],
-            ),
-            trailing: PopupMenuButton<String>(
-              onSelected: (val) {
-                if (val == 'delete') {
-                  GymService().deleteMember(m.id);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Member ${m.fullName} removed')),
-                  );
-                }
-              },
-              itemBuilder: (ctx) => [
-                const PopupMenuItem(value: 'view', child: Text('View Profile')),
-                const PopupMenuItem(value: 'renew', child: Text('Renew Membership')),
-                const PopupMenuItem(value: 'delete', child: Text('Delete Member', style: TextStyle(color: Colors.red))),
-              ],
-            ),
+              ),
+              // Bottom-Left Green Corner Accent (exact match to screenshot)
+              Positioned(
+                bottom: 0,
+                left: 0,
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF43A047),
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(16),
+                      topRight: Radius.circular(24),
+                    ),
+                  ),
+                ),
+              ),
+
+              // Main White Member Card
+              Container(
+                margin: const EdgeInsets.all(2.5),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(14),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(14),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => MemberDetailScreen(member: m),
+                        ),
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Top Area: Avatar, Info Columns, Trash Icon
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Avatar Circle
+                              Container(
+                                width: 54,
+                                height: 54,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppColors.primaryTeal,
+                                ),
+                                alignment: Alignment.center,
+                                child: m.photoBase64 != null && m.photoBase64!.isNotEmpty
+                                    ? ClipOval(
+                                        child: Image.memory(
+                                          base64Decode(m.photoBase64!),
+                                          width: 54,
+                                          height: 54,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      )
+                                    : Text(
+                                        m.fullName.isNotEmpty ? m.fullName[0].toUpperCase() : 'M',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                              ),
+                              const SizedBox(width: 12),
+
+                              // Info Column
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Name:',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: AppColors.primaryTeal,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 1),
+                                    Text(
+                                      m.fullName,
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF111827),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+
+                                    // M ID & Mobile Row
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                'M ID',
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  color: Color(0xFF6B7280),
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 1),
+                                              Text(
+                                                m.memberId,
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Color(0xFF111827),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                'Mobile:',
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  color: Color(0xFF6B7280),
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 1),
+                                              Text(
+                                                '${m.countryCode} - ${m.phone}',
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Color(0xFF111827),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 6),
+
+                                    // Plan Expiry & Due Amount Row
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                'Plan Expiry:',
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  color: Color(0xFF6B7280),
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 1),
+                                              Text(
+                                                expiryStr,
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Color(0xFF2E7D32),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                'Due Amount:',
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  color: Color(0xFF6B7280),
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 1),
+                                              Text(
+                                                dueStr,
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Color(0xFFD32F2F),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              // Trash Icon
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline, size: 20, color: Color(0xFF6B7280)),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                onPressed: () => _confirmDeleteMember(context, m),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 10),
+                          const Divider(height: 1, thickness: 0.8, color: Color(0xFFE5E7EB)),
+                          const SizedBox(height: 8),
+
+                          // Bottom Row: 6 Action Icons
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              _buildCardActionItem(
+                                icon: Icons.badge_outlined,
+                                label: 'ID Card',
+                                onTap: () => _showIdCardDialog(context, m),
+                              ),
+                              _buildCardActionItem(
+                                icon: Icons.call_outlined,
+                                label: 'Call',
+                                onTap: () => _showCallDialog(context, m),
+                              ),
+                              _buildCardActionItem(
+                                icon: Icons.chat_bubble_outline,
+                                label: 'Whatsapp',
+                                onTap: () => _showWhatsappDialog(context, m),
+                              ),
+                              _buildCardActionItem(
+                                icon: Icons.touch_app_outlined,
+                                label: 'Attendance',
+                                onTap: () => _quickMarkAttendance(context, m),
+                              ),
+                              _buildCardActionItem(
+                                icon: Icons.grid_view,
+                                label: 'Renew Plan',
+                                onTap: () => _showRenewPlanDialog(context, m),
+                              ),
+                              _buildCardActionItem(
+                                icon: Icons.block_outlined,
+                                label: m.status == MemberStatus.blocked ? 'Unblock' : 'Block Member',
+                                onTap: () => _toggleBlockMember(context, m),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildCardActionItem({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 19, color: const Color(0xFF374151)),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 9.5,
+                color: Color(0xFF4B5563),
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showIdCardDialog(BuildContext context, GymMember member) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          width: 320,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryTeal,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.fitness_center, color: Colors.white, size: 18),
+                    SizedBox(width: 8),
+                    Text(
+                      'GYM MEMBER PASS',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                width: 70,
+                height: 70,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.primaryTeal,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  member.fullName.isNotEmpty ? member.fullName[0].toUpperCase() : 'M',
+                  style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                member.fullName,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Member ID: ${member.memberId}',
+                style: const TextStyle(fontSize: 13, color: Color(0xFF4B5563), fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Phone: ${member.countryCode} ${member.phone}',
+                style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+              ),
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F5E9),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'Valid Till: ${DateFormat('dd MMM yyyy').format(member.expiryDate)}',
+                  style: const TextStyle(color: Color(0xFF2E7D32), fontWeight: FontWeight.bold, fontSize: 12),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryTeal,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 40),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Close'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showCallDialog(BuildContext context, GymMember member) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: const [
+            Icon(Icons.call, color: AppColors.primaryTeal),
+            SizedBox(width: 8),
+            Text('Call Member'),
+          ],
+        ),
+        content: Text('Dial ${member.countryCode} - ${member.phone} for ${member.fullName}?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryTeal,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Connecting call to ${member.phone}...')),
+              );
+            },
+            child: const Text('Call'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showWhatsappDialog(BuildContext context, GymMember member) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: const [
+            Icon(Icons.chat, color: Color(0xFF25D366)),
+            SizedBox(width: 8),
+            Text('WhatsApp'),
+          ],
+        ),
+        content: Text('Open WhatsApp chat with ${member.fullName} (${member.phone})?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF25D366),
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Opening WhatsApp with ${member.phone}...')),
+              );
+            },
+            child: const Text('Chat'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _quickMarkAttendance(BuildContext context, GymMember member) {
+    final now = DateTime.now();
+    final timeStr = DateFormat('hh:mm a').format(now);
+    GymService().recordAttendance(member.id, checkInTime: timeStr);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Attendance recorded for ${member.fullName} at $timeStr')),
+    );
+  }
+
+  void _showRenewPlanDialog(BuildContext context, GymMember member) {
+    String selectedPeriod = '1 Month';
+    double extraAmount = 4000;
+    int months = 1;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text('Renew Membership Plan'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Current Plan: ${member.planName}'),
+              const SizedBox(height: 10),
+              DropdownButtonFormField<String>(
+                value: selectedPeriod,
+                decoration: const InputDecoration(
+                  labelText: 'Extension Duration',
+                  border: OutlineInputBorder(),
+                ),
+                items: const [
+                  DropdownMenuItem(value: '1 Month', child: Text('1 Month (₹4,000)')),
+                  DropdownMenuItem(value: '3 Months', child: Text('3 Months (₹10,000)')),
+                  DropdownMenuItem(value: '6 Months', child: Text('6 Months (₹20,000)')),
+                  DropdownMenuItem(value: '1 Year', child: Text('1 Year (₹35,000)')),
+                ],
+                onChanged: (val) {
+                  if (val != null) {
+                    setDialogState(() {
+                      selectedPeriod = val;
+                      if (val == '1 Month') {
+                        extraAmount = 4000;
+                        months = 1;
+                      } else if (val == '3 Months') {
+                        extraAmount = 10000;
+                        months = 3;
+                      } else if (val == '6 Months') {
+                        extraAmount = 20000;
+                        months = 6;
+                      } else {
+                        extraAmount = 35000;
+                        months = 12;
+                      }
+                    });
+                  }
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryTeal,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                GymService().renewPlan(
+                  member.id,
+                  newPlanName: '$selectedPeriod plan',
+                  newPlanAmount: extraAmount,
+                  durationMonths: months,
+                );
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Plan renewed for $selectedPeriod!')),
+                );
+              },
+              child: const Text('Renew'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _toggleBlockMember(BuildContext context, GymMember member) {
+    GymService().toggleBlock(member.id);
+    final isBlocked = member.status != MemberStatus.blocked;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          isBlocked
+              ? 'Member ${member.fullName} has been blocked'
+              : 'Member ${member.fullName} unblocked',
+        ),
+      ),
+    );
+  }
+
+  void _confirmDeleteMember(BuildContext context, GymMember member) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Member'),
+        content: Text('Are you sure you want to delete ${member.fullName}?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            onPressed: () {
+              GymService().deleteMember(member.id);
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Member ${member.fullName} deleted')),
+              );
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
     );
   }
 

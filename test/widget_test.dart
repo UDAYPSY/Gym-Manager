@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_manager/main.dart';
+import 'package:gym_manager/models/gym_models.dart';
 import 'package:gym_manager/screens/add_member_screen.dart';
+import 'package:gym_manager/screens/member_detail_screen.dart';
+import 'package:gym_manager/services/gym_service.dart';
 
 void main() {
+  setUp(() {
+    GymService().clearAllMembers();
+  });
+
   testWidgets('Gym Manager exact view elements test', (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 2.0;
@@ -27,7 +34,7 @@ void main() {
     expect(find.text('3'), findsOneWidget);
 
     // Verify Search Hint and M ID toggle
-    expect(find.text('Search for "Mobile"'), findsOneWidget);
+    expect(find.text('Search for "Name"'), findsOneWidget);
     expect(find.text('M ID'), findsOneWidget);
 
     // Toggle M ID and verify hint updates to 'Search for "MembershipId"'
@@ -159,5 +166,83 @@ void main() {
     // Tap Save
     await tester.tap(find.widgetWithText(ElevatedButton, 'Save'));
     await tester.pumpAndSettle();
+  });
+
+  testWidgets('Member card renders exact layout and navigates to MemberDetailScreen', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    // Add sample member matching screenshot
+    final sampleMember = GymMember(
+      id: 'm_test_1',
+      memberId: '3',
+      fullName: 'Haajsh',
+      phone: '9496446646',
+      countryCode: '+91',
+      gender: 'Male',
+      joinedDate: DateTime(2026, 11, 20),
+      expiryDate: DateTime(2026, 12, 19),
+      planName: '6 month plan',
+      planAmount: 20000.0,
+      amountPaid: 200.0,
+      duesAmount: 19800.0,
+      paymentReminder: false,
+      biometricStatus: 'Not Registered',
+      biometricId: '18850-6',
+    );
+    GymService().addMember(sampleMember);
+
+    // Pump Main App
+    await tester.pumpWidget(const GymManagerApp());
+    await tester.pumpAndSettle();
+
+    // Verify Member card presence
+    expect(find.text('Haajsh'), findsOneWidget);
+    expect(find.text('Name:'), findsOneWidget);
+    expect(find.text('M ID'), findsNWidgets(2)); // One in search toggle, one in member card
+    expect(find.text('+91 - 9496446646'), findsOneWidget);
+    expect(find.text('Plan Expiry:'), findsOneWidget);
+    expect(find.text('19 Dec 2026'), findsOneWidget);
+    expect(find.text('Due Amount:'), findsOneWidget);
+    expect(find.text('₹19,800'), findsOneWidget);
+
+    // Verify 6 Action Icons on the card
+    expect(find.text('ID Card'), findsOneWidget);
+    expect(find.text('Call'), findsOneWidget);
+    expect(find.text('Whatsapp'), findsOneWidget);
+    expect(find.text('Attendance'), findsOneWidget);
+    expect(find.text('Renew Plan'), findsOneWidget);
+    expect(find.text('Block Member'), findsOneWidget);
+
+    // Tap on Member card to navigate to MemberDetailScreen
+    await tester.tap(find.text('Haajsh'));
+    await tester.pumpAndSettle();
+
+    // Verify Member Detail Screen
+    expect(find.text('Member Detail'), findsOneWidget);
+    expect(find.text('Biometric Access'), findsOneWidget);
+    expect(find.text('Configure'), findsOneWidget);
+    expect(find.text('Not Registered'), findsOneWidget);
+    expect(find.text('18850-6'), findsOneWidget);
+    expect(find.text('Remove Biometric Ac...'), findsOneWidget);
+    expect(find.text('Add Biometric Access'), findsOneWidget);
+
+    // Verify Plans Section
+    expect(find.text('Plans'), findsOneWidget);
+    expect(find.text('View All (1) >'), findsOneWidget);
+    expect(find.text('6 month plan'), findsOneWidget);
+    expect(find.text('Purchase Date'), findsOneWidget);
+    expect(find.text('Complete Amount'), findsOneWidget);
+    expect(find.text('Add Payment'), findsOneWidget);
+    expect(find.text('Share Invoice'), findsOneWidget);
+    expect(find.text('Freeze Membership'), findsOneWidget);
+
+    // Verify Quick Filter Chips & Attendance section
+    expect(find.text('PT Plans'), findsNWidgets(2)); // Chip and section header
+    expect(find.text('Attendance'), findsNWidgets(2)); // Chip and section header
   });
 }

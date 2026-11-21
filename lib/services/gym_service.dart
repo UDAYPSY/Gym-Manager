@@ -46,6 +46,114 @@ class GymService {
     _membersCtrl.add(List.unmodifiable(_members));
   }
 
+  void addPayment(String memberId, PaymentRecord payment) {
+    final index = _members.indexWhere((m) => m.id == memberId);
+    if (index != -1) {
+      final current = _members[index];
+      final newPaid = current.amountPaid + payment.amount;
+      final newDues = (current.planAmount - current.discount + current.admissionFees - newPaid).clamp(0.0, double.infinity);
+      final updatedHistory = List<PaymentRecord>.from(current.paymentHistory)..add(payment);
+
+      _members[index] = current.copyWith(
+        amountPaid: newPaid,
+        duesAmount: newDues,
+        paymentHistory: updatedHistory,
+      );
+      _membersCtrl.add(List.unmodifiable(_members));
+    }
+  }
+
+  void deletePayment(String memberId, String paymentId) {
+    final index = _members.indexWhere((m) => m.id == memberId);
+    if (index != -1) {
+      final current = _members[index];
+      final payment = current.paymentHistory.firstWhere((p) => p.id == paymentId, orElse: () => PaymentRecord(id: '', date: DateTime.now(), amount: 0));
+      final newPaid = (current.amountPaid - payment.amount).clamp(0.0, double.infinity);
+      final newDues = (current.planAmount - current.discount + current.admissionFees - newPaid).clamp(0.0, double.infinity);
+      final updatedHistory = current.paymentHistory.where((p) => p.id != paymentId).toList();
+
+      _members[index] = current.copyWith(
+        amountPaid: newPaid,
+        duesAmount: newDues,
+        paymentHistory: updatedHistory,
+      );
+      _membersCtrl.add(List.unmodifiable(_members));
+    }
+  }
+
+  void togglePaymentReminder(String memberId, bool reminder) {
+    final index = _members.indexWhere((m) => m.id == memberId);
+    if (index != -1) {
+      _members[index] = _members[index].copyWith(paymentReminder: reminder);
+      _membersCtrl.add(List.unmodifiable(_members));
+    }
+  }
+
+  void recordAttendance(String memberId, {required String checkInTime, String? checkOutTime}) {
+    final index = _members.indexWhere((m) => m.id == memberId);
+    if (index != -1) {
+      final current = _members[index];
+      final newRecord = AttendanceRecord(
+        id: 'att_${DateTime.now().millisecondsSinceEpoch}',
+        date: DateTime.now(),
+        checkInTime: checkInTime,
+        checkOutTime: checkOutTime,
+      );
+      final updatedHistory = List<AttendanceRecord>.from(current.attendanceHistory)..insert(0, newRecord);
+      _members[index] = current.copyWith(attendanceHistory: updatedHistory);
+      _membersCtrl.add(List.unmodifiable(_members));
+    }
+  }
+
+  void updateBiometricStatus(String memberId, {required String status, String? biometricId}) {
+    final index = _members.indexWhere((m) => m.id == memberId);
+    if (index != -1) {
+      _members[index] = _members[index].copyWith(
+        biometricStatus: status,
+        biometricId: biometricId,
+      );
+      _membersCtrl.add(List.unmodifiable(_members));
+    }
+  }
+
+  void toggleFreeze(String memberId, {bool? freeze}) {
+    final index = _members.indexWhere((m) => m.id == memberId);
+    if (index != -1) {
+      final current = _members[index];
+      final newFreeze = freeze ?? !current.isFrozen;
+      _members[index] = current.copyWith(isFrozen: newFreeze);
+      _membersCtrl.add(List.unmodifiable(_members));
+    }
+  }
+
+  void toggleBlock(String memberId) {
+    final index = _members.indexWhere((m) => m.id == memberId);
+    if (index != -1) {
+      final current = _members[index];
+      final newStatus = current.status == MemberStatus.blocked ? MemberStatus.active : MemberStatus.blocked;
+      _members[index] = current.copyWith(status: newStatus);
+      _membersCtrl.add(List.unmodifiable(_members));
+    }
+  }
+
+  void renewPlan(String memberId, {required String newPlanName, required double newPlanAmount, required int durationMonths}) {
+    final index = _members.indexWhere((m) => m.id == memberId);
+    if (index != -1) {
+      final current = _members[index];
+      final baseDate = current.isExpired ? DateTime.now() : current.expiryDate;
+      final newExpiry = DateTime(baseDate.year, baseDate.month + durationMonths, baseDate.day);
+      final newDue = current.duesAmount + newPlanAmount;
+      _members[index] = current.copyWith(
+        planName: newPlanName,
+        planAmount: newPlanAmount,
+        expiryDate: newExpiry,
+        duesAmount: newDue,
+        status: MemberStatus.active,
+      );
+      _membersCtrl.add(List.unmodifiable(_members));
+    }
+  }
+
   void setCurrency(String symbol, String code) {
     _settings.currencySymbol = symbol;
     _settings.currencyCode = code;
