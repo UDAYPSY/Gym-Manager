@@ -294,37 +294,48 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
   // ==========================================
   Widget _buildActionIconsRow(BuildContext context, GymMember member) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        _buildActionItem(
-          icon: Icons.badge_outlined,
-          label: 'ID Card',
-          onTap: () => _showIdCardDialog(context, member),
+        Expanded(
+          child: _buildActionItem(
+            icon: Icons.badge_outlined,
+            label: 'ID Card',
+            onTap: () => _showIdCardDialog(context, member),
+          ),
         ),
-        _buildActionItem(
-          icon: Icons.call_outlined,
-          label: 'Call',
-          onTap: () => _showCallDialog(context, member),
+        Expanded(
+          child: _buildActionItem(
+            icon: Icons.call_outlined,
+            label: 'Call',
+            onTap: () => _showCallDialog(context, member),
+          ),
         ),
-        _buildActionItem(
-          icon: Icons.chat_bubble_outline,
-          label: 'Whatsapp',
-          onTap: () => _showWhatsappDialog(context, member),
+        Expanded(
+          child: _buildActionItem(
+            icon: Icons.chat_bubble_outline,
+            label: 'Whatsapp',
+            onTap: () => _showWhatsappDialog(context, member),
+          ),
         ),
-        _buildActionItem(
-          icon: Icons.touch_app_outlined,
-          label: 'Attendance',
-          onTap: () => _quickMarkAttendance(context, member),
+        Expanded(
+          child: _buildActionItem(
+            icon: Icons.touch_app_outlined,
+            label: 'Attendance',
+            onTap: () => _quickMarkAttendance(context, member),
+          ),
         ),
-        _buildActionItem(
-          icon: Icons.grid_view,
-          label: 'Renew Plan',
-          onTap: () => _showRenewPlanDialog(context, member),
+        Expanded(
+          child: _buildActionItem(
+            icon: Icons.grid_view,
+            label: 'Renew Plan',
+            onTap: () => _showRenewPlanDialog(context, member),
+          ),
         ),
-        _buildActionItem(
-          icon: Icons.block_outlined,
-          label: member.status == MemberStatus.blocked ? 'Unblock' : 'Block Member',
-          onTap: () => _toggleBlockMember(context, member),
+        Expanded(
+          child: _buildActionItem(
+            icon: Icons.block_outlined,
+            label: member.status == MemberStatus.blocked ? 'Unblock' : 'Block Member',
+            onTap: () => _toggleBlockMember(context, member),
+          ),
         ),
       ],
     );
@@ -337,9 +348,9 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(6),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -348,11 +359,13 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
             Text(
               label,
               style: const TextStyle(
-                fontSize: 10,
+                fontSize: 9.5,
                 color: Color(0xFF4B5563),
                 fontWeight: FontWeight.w500,
               ),
               textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

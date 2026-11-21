@@ -908,37 +908,48 @@ class _MembersScreenState extends State<MembersScreen> {
 
                           // Bottom Row: 6 Action Icons
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
-                              _buildCardActionItem(
-                                icon: Icons.badge_outlined,
-                                label: 'ID Card',
-                                onTap: () => _showIdCardDialog(context, m),
+                              Expanded(
+                                child: _buildCardActionItem(
+                                  icon: Icons.badge_outlined,
+                                  label: 'ID Card',
+                                  onTap: () => _showIdCardDialog(context, m),
+                                ),
                               ),
-                              _buildCardActionItem(
-                                icon: Icons.call_outlined,
-                                label: 'Call',
-                                onTap: () => _showCallDialog(context, m),
+                              Expanded(
+                                child: _buildCardActionItem(
+                                  icon: Icons.call_outlined,
+                                  label: 'Call',
+                                  onTap: () => _showCallDialog(context, m),
+                                ),
                               ),
-                              _buildCardActionItem(
-                                icon: Icons.chat_bubble_outline,
-                                label: 'Whatsapp',
-                                onTap: () => _showWhatsappDialog(context, m),
+                              Expanded(
+                                child: _buildCardActionItem(
+                                  icon: Icons.chat_bubble_outline,
+                                  label: 'Whatsapp',
+                                  onTap: () => _showWhatsappDialog(context, m),
+                                ),
                               ),
-                              _buildCardActionItem(
-                                icon: Icons.touch_app_outlined,
-                                label: 'Attendance',
-                                onTap: () => _quickMarkAttendance(context, m),
+                              Expanded(
+                                child: _buildCardActionItem(
+                                  icon: Icons.touch_app_outlined,
+                                  label: 'Attendance',
+                                  onTap: () => _quickMarkAttendance(context, m),
+                                ),
                               ),
-                              _buildCardActionItem(
-                                icon: Icons.grid_view,
-                                label: 'Renew Plan',
-                                onTap: () => _showRenewPlanDialog(context, m),
+                              Expanded(
+                                child: _buildCardActionItem(
+                                  icon: Icons.grid_view,
+                                  label: 'Renew Plan',
+                                  onTap: () => _showRenewPlanDialog(context, m),
+                                ),
                               ),
-                              _buildCardActionItem(
-                                icon: Icons.block_outlined,
-                                label: m.status == MemberStatus.blocked ? 'Unblock' : 'Block Member',
-                                onTap: () => _toggleBlockMember(context, m),
+                              Expanded(
+                                child: _buildCardActionItem(
+                                  icon: Icons.block_outlined,
+                                  label: m.status == MemberStatus.blocked ? 'Unblock' : 'Block Member',
+                                  onTap: () => _toggleBlockMember(context, m),
+                                ),
                               ),
                             ],
                           ),
@@ -964,7 +975,7 @@ class _MembersScreenState extends State<MembersScreen> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(6),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 3),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -973,11 +984,13 @@ class _MembersScreenState extends State<MembersScreen> {
             Text(
               label,
               style: const TextStyle(
-                fontSize: 9.5,
+                fontSize: 9,
                 color: Color(0xFF4B5563),
                 fontWeight: FontWeight.w500,
               ),
               textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
