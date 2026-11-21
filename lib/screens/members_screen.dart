@@ -9,6 +9,7 @@ import '../widgets/filter_bottom_sheet.dart';
 import '../widgets/currency_picker_dialog.dart';
 import 'add_member_screen.dart';
 import 'member_detail_screen.dart';
+import '../utils/member_actions.dart';
 
 class MembersScreen extends StatefulWidget {
   const MembersScreen({Key? key}) : super(key: key);
@@ -913,42 +914,42 @@ class _MembersScreenState extends State<MembersScreen> {
                                 child: _buildCardActionItem(
                                   icon: Icons.badge_outlined,
                                   label: 'ID Card',
-                                  onTap: () => _showIdCardDialog(context, m),
+                                  onTap: () => MemberActions.openIdCard(context, m),
                                 ),
                               ),
                               Expanded(
                                 child: _buildCardActionItem(
                                   icon: Icons.call_outlined,
                                   label: 'Call',
-                                  onTap: () => _showCallDialog(context, m),
+                                  onTap: () => MemberActions.makePhoneCall(context, m),
                                 ),
                               ),
                               Expanded(
                                 child: _buildCardActionItem(
                                   icon: Icons.chat_bubble_outline,
                                   label: 'Whatsapp',
-                                  onTap: () => _showWhatsappDialog(context, m),
+                                  onTap: () => MemberActions.openWhatsApp(context, m),
                                 ),
                               ),
                               Expanded(
                                 child: _buildCardActionItem(
                                   icon: Icons.touch_app_outlined,
                                   label: 'Attendance',
-                                  onTap: () => _quickMarkAttendance(context, m),
+                                  onTap: () => MemberActions.markAttendance(context, m),
                                 ),
                               ),
                               Expanded(
                                 child: _buildCardActionItem(
                                   icon: Icons.grid_view,
                                   label: 'Renew Plan',
-                                  onTap: () => _showRenewPlanDialog(context, m),
+                                  onTap: () => MemberActions.renewPlan(context, m),
                                 ),
                               ),
                               Expanded(
                                 child: _buildCardActionItem(
                                   icon: Icons.block_outlined,
                                   label: m.status == MemberStatus.blocked ? 'Unblock' : 'Block Member',
-                                  onTap: () => _toggleBlockMember(context, m),
+                                  onTap: () => MemberActions.blockMember(context, m),
                                 ),
                               ),
                             ],
@@ -998,267 +999,23 @@ class _MembersScreenState extends State<MembersScreen> {
     );
   }
 
-  void _showIdCardDialog(BuildContext context, GymMember member) {
-    showDialog(
-      context: context,
-      builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Container(
-          width: 320,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryTeal,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.fitness_center, color: Colors.white, size: 18),
-                    SizedBox(width: 8),
-                    Text(
-                      'GYM MEMBER PASS',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                width: 70,
-                height: 70,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.primaryTeal,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  member.fullName.isNotEmpty ? member.fullName[0].toUpperCase() : 'M',
-                  style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                member.fullName,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Member ID: ${member.memberId}',
-                style: const TextStyle(fontSize: 13, color: Color(0xFF4B5563), fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                'Phone: ${member.countryCode} ${member.phone}',
-                style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
-              ),
-              const SizedBox(height: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8F5E9),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  'Valid Till: ${DateFormat('dd MMM yyyy').format(member.expiryDate)}',
-                  style: const TextStyle(color: Color(0xFF2E7D32), fontWeight: FontWeight.bold, fontSize: 12),
-                ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryTeal,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 40),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Close'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  void _showIdCardDialog(BuildContext context, GymMember member) =>
+      MemberActions.openIdCard(context, member);
 
-  void _showCallDialog(BuildContext context, GymMember member) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: const [
-            Icon(Icons.call, color: AppColors.primaryTeal),
-            SizedBox(width: 8),
-            Text('Call Member'),
-          ],
-        ),
-        content: Text('Dial ${member.countryCode} - ${member.phone} for ${member.fullName}?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryTeal,
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () {
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Connecting call to ${member.phone}...')),
-              );
-            },
-            child: const Text('Call'),
-          ),
-        ],
-      ),
-    );
-  }
+  void _showCallDialog(BuildContext context, GymMember member) =>
+      MemberActions.makePhoneCall(context, member);
 
-  void _showWhatsappDialog(BuildContext context, GymMember member) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: const [
-            Icon(Icons.chat, color: Color(0xFF25D366)),
-            SizedBox(width: 8),
-            Text('WhatsApp'),
-          ],
-        ),
-        content: Text('Open WhatsApp chat with ${member.fullName} (${member.phone})?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF25D366),
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () {
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Opening WhatsApp with ${member.phone}...')),
-              );
-            },
-            child: const Text('Chat'),
-          ),
-        ],
-      ),
-    );
-  }
+  void _showWhatsappDialog(BuildContext context, GymMember member) =>
+      MemberActions.openWhatsApp(context, member);
 
-  void _quickMarkAttendance(BuildContext context, GymMember member) {
-    final now = DateTime.now();
-    final timeStr = DateFormat('hh:mm a').format(now);
-    GymService().recordAttendance(member.id, checkInTime: timeStr);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Attendance recorded for ${member.fullName} at $timeStr')),
-    );
-  }
+  void _quickMarkAttendance(BuildContext context, GymMember member) =>
+      MemberActions.markAttendance(context, member);
 
-  void _showRenewPlanDialog(BuildContext context, GymMember member) {
-    String selectedPeriod = '1 Month';
-    double extraAmount = 4000;
-    int months = 1;
+  void _showRenewPlanDialog(BuildContext context, GymMember member) =>
+      MemberActions.renewPlan(context, member);
 
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text('Renew Membership Plan'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Current Plan: ${member.planName}'),
-              const SizedBox(height: 10),
-              DropdownButtonFormField<String>(
-                value: selectedPeriod,
-                decoration: const InputDecoration(
-                  labelText: 'Extension Duration',
-                  border: OutlineInputBorder(),
-                ),
-                items: const [
-                  DropdownMenuItem(value: '1 Month', child: Text('1 Month (₹4,000)')),
-                  DropdownMenuItem(value: '3 Months', child: Text('3 Months (₹10,000)')),
-                  DropdownMenuItem(value: '6 Months', child: Text('6 Months (₹20,000)')),
-                  DropdownMenuItem(value: '1 Year', child: Text('1 Year (₹35,000)')),
-                ],
-                onChanged: (val) {
-                  if (val != null) {
-                    setDialogState(() {
-                      selectedPeriod = val;
-                      if (val == '1 Month') {
-                        extraAmount = 4000;
-                        months = 1;
-                      } else if (val == '3 Months') {
-                        extraAmount = 10000;
-                        months = 3;
-                      } else if (val == '6 Months') {
-                        extraAmount = 20000;
-                        months = 6;
-                      } else {
-                        extraAmount = 35000;
-                        months = 12;
-                      }
-                    });
-                  }
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryTeal,
-                foregroundColor: Colors.white,
-              ),
-              onPressed: () {
-                GymService().renewPlan(
-                  member.id,
-                  newPlanName: '$selectedPeriod plan',
-                  newPlanAmount: extraAmount,
-                  durationMonths: months,
-                );
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Plan renewed for $selectedPeriod!')),
-                );
-              },
-              child: const Text('Renew'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _toggleBlockMember(BuildContext context, GymMember member) {
-    GymService().toggleBlock(member.id);
-    final isBlocked = member.status != MemberStatus.blocked;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          isBlocked
-              ? 'Member ${member.fullName} has been blocked'
-              : 'Member ${member.fullName} unblocked',
-        ),
-      ),
-    );
-  }
+  void _toggleBlockMember(BuildContext context, GymMember member) =>
+      MemberActions.blockMember(context, member);
 
   void _confirmDeleteMember(BuildContext context, GymMember member) {
     showDialog(

@@ -245,4 +245,106 @@ void main() {
     expect(find.text('PT Plans'), findsAtLeastNWidgets(1));
     expect(find.text('Attendance'), findsAtLeastNWidgets(2));
   });
+
+  testWidgets('6 Actions (ID Card, Call, Whatsapp, Attendance, Renew Plan, Block Member) flow test', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final testMember = GymMember(
+      id: 'm_test_action',
+      memberId: '3',
+      fullName: 'Haajsh',
+      phone: '9496446646',
+      countryCode: '+91',
+      joinedDate: DateTime(2026, 11, 20),
+      expiryDate: DateTime(2026, 12, 19),
+      planName: '6 month plan',
+      planAmount: 20000.0,
+      amountPaid: 200.0,
+      duesAmount: 19800.0,
+    );
+    GymService().addMember(testMember);
+
+    await tester.pumpWidget(const GymManagerApp());
+    await tester.pumpAndSettle();
+
+    // 1. Test ID Card -> Opens Gym Pass Bottom Sheet
+    await tester.tap(find.text('ID Card'));
+    await tester.pumpAndSettle();
+    expect(find.text('Gym Pass'), findsOneWidget);
+    expect(find.text('Modern'), findsOneWidget);
+    expect(find.text('Classic'), findsOneWidget);
+    expect(find.text('Bold'), findsOneWidget);
+    expect(find.text('Raja Bhaiaya'), findsOneWidget);
+    expect(find.text('Share Old Pass'), findsOneWidget);
+
+    // Switch to Classic style
+    await tester.tap(find.text('Classic'));
+    await tester.pumpAndSettle();
+    expect(find.text('Member ID'), findsOneWidget);
+
+    // Switch to Bold style
+    await tester.tap(find.text('Bold'));
+    await tester.pumpAndSettle();
+    expect(find.text('Membership Id: 3'), findsOneWidget);
+
+    // Close sheet
+    await tester.tap(find.byIcon(Icons.close));
+    await tester.pumpAndSettle();
+
+    // 2. Test Call -> Triggers phone call
+    await tester.tap(find.text('Call'));
+    await tester.pumpAndSettle();
+
+    // 3. Test Whatsapp -> Opens Whatsapp sheet
+    await tester.tap(find.text('Whatsapp'));
+    await tester.pumpAndSettle();
+    expect(find.text('Send Whatsapp message:'), findsOneWidget);
+    expect(find.text('+919496446646'), findsOneWidget);
+    expect(find.text('Payment Confirmation'), findsOneWidget);
+    expect(find.text('Payment reminders'), findsOneWidget);
+    expect(find.text('Add custom message'), findsOneWidget);
+
+    // Switch to Payment reminders template
+    await tester.tap(find.text('Payment reminders'));
+    await tester.pumpAndSettle();
+
+    // Close whatsapp sheet
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+
+    // 4. Test Attendance -> Marks attendance
+    await tester.tap(find.text('Attendance'));
+    await tester.pumpAndSettle();
+    expect(find.byType(SnackBar), findsOneWidget);
+
+    // 5. Test Renew Plan -> Opens Renew Plan screen
+    await tester.tap(find.text('Renew Plan'));
+    await tester.pumpAndSettle();
+    expect(find.text('Renew Plan'), findsOneWidget);
+    expect(find.text('Select Gym Plan'), findsOneWidget);
+    expect(find.text('Plan Start Date *'), findsOneWidget);
+    expect(find.text('Save'), findsOneWidget);
+
+    // Go back
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+
+    // 6. Test Block Member -> Opens Confirm dialog
+    await tester.tap(find.text('Block Member'));
+    await tester.pumpAndSettle();
+    expect(find.text('Confirm?'), findsOneWidget);
+    expect(find.text('Are you sure you want to block Haajsh?'), findsOneWidget);
+    expect(find.text('NO'), findsOneWidget);
+    expect(find.text('BLOCK'), findsOneWidget);
+
+    // Confirm block
+    await tester.tap(find.text('BLOCK'));
+    await tester.pumpAndSettle();
+    expect(GymService().members.first.status, MemberStatus.blocked);
+  });
 }
