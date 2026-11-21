@@ -488,56 +488,69 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
 
           // Action Buttons: Remove Biometric Access / Add Biometric Access
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              InkWell(
-                onTap: () {
-                  _gymService.updateBiometricStatus(
-                    member.id,
-                    status: 'Not Registered',
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Biometric access removed')),
-                  );
-                },
-                child: Row(
-                  children: const [
-                    Icon(Icons.delete_outline, size: 16, color: Color(0xFF4B5563)),
-                    SizedBox(width: 4),
-                    Text(
-                      'Remove Biometric Ac...',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF4B5563),
-                        fontWeight: FontWeight.w500,
+              Expanded(
+                child: InkWell(
+                  onTap: () {
+                    _gymService.updateBiometricStatus(
+                      member.id,
+                      status: 'Not Registered',
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Biometric access removed')),
+                    );
+                  },
+                  child: Row(
+                    children: const [
+                      Icon(Icons.delete_outline, size: 16, color: Color(0xFF4B5563)),
+                      SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          'Remove Biometric Ac...',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF4B5563),
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-              InkWell(
-                onTap: () {
-                  _gymService.updateBiometricStatus(
-                    member.id,
-                    status: 'Registered',
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Biometric access registered successfully!')),
-                  );
-                },
-                child: Row(
-                  children: const [
-                    Icon(Icons.fingerprint, size: 16, color: AppColors.primaryTeal),
-                    SizedBox(width: 4),
-                    Text(
-                      'Add Biometric Access',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.primaryTeal,
-                        fontWeight: FontWeight.w600,
+              const SizedBox(width: 8),
+              Expanded(
+                child: InkWell(
+                  onTap: () {
+                    _gymService.updateBiometricStatus(
+                      member.id,
+                      status: 'Registered',
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Biometric access registered successfully!')),
+                    );
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: const [
+                      Icon(Icons.fingerprint, size: 16, color: AppColors.primaryTeal),
+                      SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          'Add Biometric Access',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.primaryTeal,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -983,40 +996,53 @@ class _MemberDetailScreenState extends State<MemberDetailScreen> {
 
               // Row 8: Action Links: Share Invoice / Freeze Membership
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  InkWell(
-                    onTap: () => _showInvoiceDialog(context, member),
-                    child: Row(
-                      children: const [
-                        Icon(Icons.reply, size: 18, color: Color(0xFF00796B)),
-                        SizedBox(width: 4),
-                        Text(
-                          'Share Invoice',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF00796B),
-                            fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => _showInvoiceDialog(context, member),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(Icons.reply, size: 18, color: Color(0xFF00796B)),
+                          SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              'Share Invoice',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF00796B),
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                  InkWell(
-                    onTap: () => _showFreezeMembershipDialog(context, member),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.ac_unit, size: 18, color: Color(0xFF00796B)),
-                        const SizedBox(width: 4),
-                        Text(
-                          member.isFrozen ? 'Unfreeze Membership' : 'Freeze Membership',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF00796B),
-                            fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => _showFreezeMembershipDialog(context, member),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.ac_unit, size: 18, color: Color(0xFF00796B)),
+                          SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              member.isFrozen ? 'Unfreeze Membership' : 'Freeze Membership',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF00796B),
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],
